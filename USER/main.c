@@ -1,5 +1,9 @@
-
 #include "main.h"
+
+
+#include "bsp_led.h"
+#include "bsp_esp8266.h"
+#include "bsp_emqx.h"
 
 static void BSP_Init(void)
 {
@@ -18,8 +22,16 @@ static void BSP_Init(void)
 	
 	/* LED初始化 */
 	LED_GPIO_Config();
-	Usart2_Init(115200);
+	
+	/* WIFI初始化 */
+	Usart3_Init(115200);
 	ESP8266_Init();
+	
+	/* EMQX连接 */
+	while(EMQX_DevLink())
+		delay_ms(500);
+	
+	EMQX_Subscribe(sub_topics, 8);
 
 }
 

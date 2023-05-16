@@ -8,8 +8,9 @@
 #include "usart.h"
 #include "sys.h"
 
-#include "bsp_led.h"
-#include "bsp_esp8266.h"
+#include "thingfly_config.h"
+
+const char *sub_topics[] = {sInfoTopic, sOtaTopic, sNtpTopic, sPropertyTopic, sFunctionTopic, sPropertyOnline, sFunctionOnline, sMonitorTopic};
 
 
 // APPÈÎÎñ

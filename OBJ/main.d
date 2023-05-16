@@ -43,5 +43,7 @@
 ..\obj\main.o: ..\FreeRTOS\include\task.h
 ..\obj\main.o: ..\FreeRTOS\include\list.h
 ..\obj\main.o: ..\HARDWARE\BSP\delay\delay.h
+..\obj\main.o: ..\HARDWARE\CONFIG\thingfly_config.h
 ..\obj\main.o: ..\HARDWARE\DEVICES\led\bsp_led.h
 ..\obj\main.o: ..\HARDWARE\DEVICES\esp8266\bsp_esp8266.h
+..\obj\main.o: ..\HARDWARE\DEVICES\emqx\bsp_emqx.h

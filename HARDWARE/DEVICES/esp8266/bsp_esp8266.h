@@ -10,12 +10,12 @@
 
 
 void ESP8266_Init(void);
-void Usart2_Init(unsigned int baud);
+void Usart3_Init(unsigned int baud);
 void ESP8266_Clear(void);
 
 void ESP8266_SendData(unsigned char *data, unsigned short len);
 
 unsigned char *ESP8266_GetIPD(unsigned short timeOut);
-void Usart2_SendString(unsigned char *str, unsigned short len);
+void Usart3_SendString(unsigned char *str, unsigned short len);
 
 #endif

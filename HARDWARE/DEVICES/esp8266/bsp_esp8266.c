@@ -36,6 +36,8 @@ void ESP8266_Clear(void)
 	esp8266_cnt = 0;
 }
 
+
+
 //==========================================================
 //	函数名称：	ESP8266_WaitRecive
 //
@@ -80,7 +82,7 @@ _Bool ESP8266_WaitRecive(void)
 //==========================================================
 _Bool ESP8266_SendCmd(char *cmd, char *res, u16 time)
 {	
-	Usart2_SendString((unsigned char *)cmd, strlen((const char *)cmd));
+	Usart3_SendString((unsigned char *)cmd, strlen((const char *)cmd));
 
 	while(time--)
 	{
@@ -98,6 +100,8 @@ _Bool ESP8266_SendCmd(char *cmd, char *res, u16 time)
 	}
 	return 1;
 }
+
+
 
 //==========================================================
 //	函数名称：	ESP8266_SendData
@@ -120,9 +124,10 @@ void ESP8266_SendData(unsigned char *data, unsigned short len)
 	sprintf(cmdBuf, "AT+CIPSEND=%d\r\n", len);		//发送命令
 	if(!ESP8266_SendCmd(cmdBuf, ">", 200))				//收到‘>’时可以发送数据
 	{
-		Usart2_SendString(data, len);		//发送设备连接请求数据
+		Usart3_SendString(data, len);		//发送设备连接请求数据
 	}
 }
+
 
 //==========================================================
 //	函数名称：	ESP8266_GetIPD
@@ -171,6 +176,7 @@ unsigned char *ESP8266_GetIPD(unsigned short timeOut)
 
 }
 
+
 //==========================================================
 //	函数名称：	ESP8266_Init
 //
@@ -190,13 +196,17 @@ void ESP8266_Init(void)
 
 	//ESP8266复位引脚
 	GPIO_Initure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Initure.GPIO_Pin = GPIO_Pin_1;					//GPIOB1-复位
+	GPIO_Initure.GPIO_Pin = GPIO_Pin_9;					//GPIOB1-复位
 	GPIO_Initure.GPIO_Speed = GPIO_Speed_50MHz;
 	GPIO_Init(GPIOB, &GPIO_Initure);
 	
-	GPIO_WriteBit(GPIOB, GPIO_Pin_1, Bit_RESET);
-	delay_ms(250);
-	GPIO_WriteBit(GPIOB, GPIO_Pin_1, Bit_SET);
+	GPIO_Initure.GPIO_Pin = GPIO_Pin_8;					//GPIOB1-复位
+	GPIO_Initure.GPIO_Speed = GPIO_Speed_50MHz;
+	GPIO_Init(GPIOB, &GPIO_Initure);
+	
+	GPIO_WriteBit(GPIOB, GPIO_Pin_8, Bit_SET);
+	delay_ms(500);
+	GPIO_WriteBit(GPIOB, GPIO_Pin_9, Bit_SET);
 	delay_ms(500);
 	
 	ESP8266_Clear();
@@ -215,7 +225,7 @@ void ESP8266_Init(void)
 		delay_ms(500);
 	
 	printf("CWJAP\r\n");																					
-	while(ESP8266_SendCmd(ESP8266_WIFI_INFO, "GOT IP", 200))			//连接热点
+	while(ESP8266_SendCmd(ESP8266_WIFI_INFO, "OK", 200))			//连接热点
 		delay_ms(500);
 	
 	printf("CIPSTART\r\n");
@@ -226,40 +236,37 @@ void ESP8266_Init(void)
 }
 
 
+
 /*
 ************************************************************
-*	函数名称：	Usart2_Init
+*	函数名称：	Usart3_Init
 *
 *	函数功能：	串口2初始化
 *
 *	入口参数：	baud：设定的波特率
-*
-*	返回参数：	无
-*
-*	说明：		TX-PA2		RX-PA3
 ************************************************************
 */
-void Usart2_Init(unsigned int baud)
+void Usart3_Init(unsigned int baud)
 {
 
 	GPIO_InitTypeDef gpio_initstruct;
 	USART_InitTypeDef usart_initstruct;
 	NVIC_InitTypeDef nvic_initstruct;
 	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART2, ENABLE);
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+	RCC_APB1PeriphClockCmd(RCC_APB1Periph_USART3, ENABLE);
 	
-	//PA2	TXD
+	//PB10	TXD
 	gpio_initstruct.GPIO_Mode = GPIO_Mode_AF_PP;
-	gpio_initstruct.GPIO_Pin = GPIO_Pin_2;
+	gpio_initstruct.GPIO_Pin = GPIO_Pin_10;
 	gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &gpio_initstruct);
+	GPIO_Init(GPIOB, &gpio_initstruct);
 	
-	//PA3	RXD
+	//PB11	RXD
 	gpio_initstruct.GPIO_Mode = GPIO_Mode_IN_FLOATING;
-	gpio_initstruct.GPIO_Pin = GPIO_Pin_3;
+	gpio_initstruct.GPIO_Pin = GPIO_Pin_11;
 	gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;
-	GPIO_Init(GPIOA, &gpio_initstruct);
+	GPIO_Init(GPIOB, &gpio_initstruct);
 	
 	usart_initstruct.USART_BaudRate = baud;
 	usart_initstruct.USART_HardwareFlowControl = USART_HardwareFlowControl_None;		//无硬件流控
@@ -267,13 +274,13 @@ void Usart2_Init(unsigned int baud)
 	usart_initstruct.USART_Parity = USART_Parity_No;									//无校验
 	usart_initstruct.USART_StopBits = USART_StopBits_1;								//1位停止位
 	usart_initstruct.USART_WordLength = USART_WordLength_8b;							//8位数据位
-	USART_Init(USART2, &usart_initstruct);
+	USART_Init(USART3, &usart_initstruct);
 	
-	USART_Cmd(USART2, ENABLE);														//使能串口
+	USART_Cmd(USART3, ENABLE);														//使能串口
 	
-	USART_ITConfig(USART2, USART_IT_RXNE, ENABLE);									//使能接收中断
+	USART_ITConfig(USART3, USART_IT_RXNE, ENABLE);									//使能接收中断
 	
-	nvic_initstruct.NVIC_IRQChannel = USART2_IRQn;
+	nvic_initstruct.NVIC_IRQChannel = USART3_IRQn;
 	nvic_initstruct.NVIC_IRQChannelCmd = ENABLE;
 	nvic_initstruct.NVIC_IRQChannelPreemptionPriority = 0;
 	nvic_initstruct.NVIC_IRQChannelSubPriority = 0;
@@ -283,7 +290,7 @@ void Usart2_Init(unsigned int baud)
 
 
 //==========================================================
-//	函数名称：	USART2_IRQHandler
+//	函数名称：	USART3_IRQHandler
 //
 //	函数功能：	串口2收发中断
 //
@@ -293,14 +300,14 @@ void Usart2_Init(unsigned int baud)
 //
 //	说明：		
 //==========================================================
-void USART2_IRQHandler(void)
+void USART3_IRQHandler(void)
 {
-	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) //接收中断
+	if(USART_GetITStatus(USART3, USART_IT_RXNE) != RESET) //接收中断
 	{
 		if(esp8266_cnt >= sizeof(esp8266_buf))	esp8266_cnt = 0; //防止串口被刷爆
-		esp8266_buf[esp8266_cnt++] = USART2->DR;
+		esp8266_buf[esp8266_cnt++] = USART3->DR;
 		
-		USART_ClearFlag(USART2, USART_FLAG_RXNE);
+		USART_ClearFlag(USART3, USART_FLAG_RXNE);
 	}
 }
 
@@ -320,14 +327,14 @@ void USART2_IRQHandler(void)
 *	说明：		
 ************************************************************
 */
-void Usart2_SendString(unsigned char *str, unsigned short len)
+void Usart3_SendString(unsigned char *str, unsigned short len)
 {
 	unsigned short count = 0;
 	
 	for(; count < len; count++)
 	{
-		USART_SendData(USART2, *str++);									//发送数据
-		while(USART_GetFlagStatus(USART2, USART_FLAG_TC) == RESET);		//等待发送完成
+		USART_SendData(USART3, *str++);									//发送数据
+		while(USART_GetFlagStatus(USART3, USART_FLAG_TC) == RESET);		//等待发送完成
 	}
 }
 
